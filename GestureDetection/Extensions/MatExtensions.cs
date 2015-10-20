@@ -47,5 +47,21 @@ namespace GestureDetection.Extensions
 
             return output;
         }
+  
+        public static Mat GaussianBlur(this Mat frame)
+        {
+            var result = new Mat();
+            CvInvoke.GaussianBlur(frame, result, new Size(21, 21), 0);
+
+            return result;
+        }
+
+        public static Mat Threshold(this Mat frame, double from, double to)
+        {
+            var result = new Mat();
+            CvInvoke.Threshold(frame, result, from, to, ThresholdType.Binary);
+
+            return result;
+        }
     }
 }

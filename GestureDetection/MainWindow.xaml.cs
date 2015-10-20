@@ -14,6 +14,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using Emgu.CV.BgSegm;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using Emgu.CV.Utility;
@@ -55,7 +56,7 @@ namespace GestureDetection
         private void InitializeEmguCv()
         {
             capture = new Capture(CaptureType.Any);
-            backgroundSubtractor = new BackgroundSubtractorMOG2();
+            backgroundSubtractor = new BackgroundSubtractorGMG(360, 0.7);
         }
 
         private void ProcessFrame(object sender, EventArgs e)
@@ -63,6 +64,8 @@ namespace GestureDetection
             Camera.Source = capture
                 .QueryFrame()
                 .SubtrackBackground(backgroundSubtractor)
+                .GaussianBlur()
+                .Threshold(175, 255)
                 .Skeletonize()
                 .ToBitmapSource();
         }

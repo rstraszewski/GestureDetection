@@ -37,6 +37,9 @@
     <Reference Include="Emgu.CV">
       <HintPath>EmguCv\Emgu.CV.dll</HintPath>
     </Reference>
+    <Reference Include="Emgu.CV.Contrib">
+      <HintPath>EmguCv\Emgu.CV.Contrib.dll</HintPath>
+    </Reference>
     <Reference Include="Emgu.Util">
       <HintPath>EmguCv\Emgu.Util.dll</HintPath>
     </Reference>

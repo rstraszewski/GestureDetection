@@ -18,6 +18,7 @@ using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using Emgu.CV.Utility;
 using Emgu.CV.VideoSurveillance;
+using GestureDetection.Extensions;
 using Point = System.Drawing.Point;
 using Size = System.Drawing.Size;
 
@@ -59,40 +60,13 @@ namespace GestureDetection
 
         private void ProcessFrame(object sender, EventArgs e)
         {
-            var frame = capture.QueryFrame();
-            var subtracked = SubtrackBackground(frame);
-            var skeletonized = Skeletonize(subtracked);
-            Camera.Source = skeletonized.ToBitmapSource();
+            Camera.Source = capture
+                .QueryFrame()
+                .SubtrackBackground(backgroundSubtractor)
+                .Skeletonize()
+                .ToBitmapSource();
         }
 
-        private Mat SubtrackBackground(IInputArrayOfArrays frame)
-        {
-            var output = new Mat();
-            backgroundSubtractor.Apply(frame, output);
-
-            return output;
-        }
-
-        private Mat Skeletonize(Mat frame)
-        {
-            CvInvoke.Threshold(frame, frame, 127, 255, ThresholdType.Binary);
-            var skel = new Mat(frame.Size, DepthType.Cv8U, 1);
-            var temp = new Mat(frame.Size, DepthType.Cv8U, 1);
-            var eroded = new Mat(frame.Size, DepthType.Cv8U, 1);
-            skel.SetTo(new Bgr(0,0,0).MCvScalar);
-
-            var element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(3, 3), new Point(1,1));
-
-            do
-            {
-                CvInvoke.Erode(frame, eroded, element, new Point(1,1), 1, BorderType.Constant, new MCvScalar());
-                CvInvoke.Dilate(eroded, temp, element, new Point(1,1), 1, BorderType.Constant, new MCvScalar());
-                CvInvoke.Subtract(frame, temp, temp);
-                CvInvoke.BitwiseOr(skel, temp, skel);
-                eroded.CopyTo(frame);
-            } while (CvInvoke.CountNonZero(frame) != 0);
-
-            return skel;
-        }
+        
     }
 }

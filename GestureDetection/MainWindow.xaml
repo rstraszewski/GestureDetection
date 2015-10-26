@@ -7,6 +7,17 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525" Loaded="WindowLoaded">
     <Grid>
-        <Image Name="Camera" Stretch="Fill" />
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width="1*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*" />
+            <RowDefinition Height="1*" />
+        </Grid.RowDefinitions>
+        <Image Grid.Row="1" Grid.Column="1" Name="Camera" />
+        <Image Grid.Row="1" Grid.Column="0"  Name="CameraSkeletonized" />
+        <Image Grid.Row="0" Grid.Column="1" Name="CameraMog" />
+        <Image Grid.Row="0" Grid.Column="0"  Name="CameraMogSkeletonized" />
     </Grid>
 </Window>

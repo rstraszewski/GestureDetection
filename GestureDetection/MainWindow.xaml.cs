@@ -1,12 +1,17 @@
 ﻿using Emgu.CV;
 using System;
+using System.Drawing;
 using System.Windows;
 using System.Windows.Threading;
 using Emgu.CV.BgSegm;
 using Emgu.CV.CvEnum;
+using Emgu.CV.Structure;
+using Emgu.CV.Util;
 using Emgu.CV.Utility;
 using Emgu.CV.VideoSurveillance;
 using GestureDetection.Extensions;
+using Point = System.Drawing.Point;
+using Size = System.Drawing.Size;
 
 namespace GestureDetection
 {
@@ -18,6 +23,7 @@ namespace GestureDetection
         private Capture capture;
         private DispatcherTimer timer;
         private BackgroundSubtractor backgroundSubtractor;
+        private Mat background;
         public MainWindow()
         {
             InitializeComponent();
@@ -41,20 +47,41 @@ namespace GestureDetection
         private void InitializeEmguCv()
         {
             capture = new Capture(CaptureType.Any);
-            backgroundSubtractor = new BackgroundSubtractorGMG(360, 0.7);
+            backgroundSubtractor = new BackgroundSubtractorMOG2();
+
+
+            background = capture
+                .QueryFrame()
+                .ToGrey()
+                .GaussianBlur(new Size(11, 11));
+
         }
 
         private void ProcessFrame(object sender, EventArgs e)
         {
-            Camera.Source = capture
-                .QueryFrame()
+            var frame = capture
+                .QueryFrame();
+           var mask = frame
+                .ToGrey()
+                .GaussianBlur(new Size(11, 11))
+                .AbsDiff(background)
+                .Threshold(25, 255)
+                .Dilate(2);
+
+            Camera.Source = mask.ToBitmapSource();
+
+            CameraSkeletonized.Source = mask.Skeletonize().ToBitmapSource();
+            var maskMog = frame
                 .SubtrackBackground(backgroundSubtractor)
-                .GaussianBlur()
                 .Threshold(175, 255)
+                .Erode(2);
+
+            CameraMog.Source = maskMog.ToBitmapSource();
+
+
+            CameraMogSkeletonized.Source = maskMog
                 .Skeletonize()
                 .ToBitmapSource();
-        }
-
-        
+        }       
     }
 }

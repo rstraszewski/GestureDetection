@@ -48,11 +48,18 @@ namespace GestureDetection.Extensions
             return output;
         }
   
-        public static Mat GaussianBlur(this Mat frame)
+        public static Mat GaussianBlur(this Mat frame, Size size)
         {
             var result = new Mat();
-            CvInvoke.GaussianBlur(frame, result, new Size(21, 21), 0);
+            CvInvoke.GaussianBlur(frame, result, size, 0);
 
+            return result;
+        }
+
+        public static Mat ToGrey(this Mat frame)
+        {
+            var result = new Mat();
+            CvInvoke.CvtColor(frame, result, ColorConversion.Bgr2Gray);
             return result;
         }
 
@@ -61,6 +68,29 @@ namespace GestureDetection.Extensions
             var result = new Mat();
             CvInvoke.Threshold(frame, result, from, to, ThresholdType.Binary);
 
+            return result;
+        }
+
+        public static Mat Dilate(this Mat frame, int interations = 1, IInputArray element = null)
+        {
+            var result = new Mat();
+            CvInvoke.Dilate(frame, result, element, new Point(1, 1), interations, BorderType.Constant, new MCvScalar());
+
+            return result;
+        }
+
+        public static Mat Erode(this Mat frame, int interations = 1, IInputArray element = null)
+        {
+            var result = new Mat();
+            CvInvoke.Erode(frame, result, element, new Point(1, 1), interations, BorderType.Constant, new MCvScalar());
+
+            return result;
+        }
+
+        public static Mat AbsDiff(this Mat src1, Mat src2)
+        {
+            var result = new Mat();
+            CvInvoke.AbsDiff(src1, src2, result);
             return result;
         }
     }

@@ -65,23 +65,24 @@ namespace GestureDetection
                 .ToGrey()
                 .GaussianBlur(new Size(11, 11))
                 .AbsDiff(background)
-                .Threshold(25, 255)
+                .Threshold(130, 200)
                 .Dilate(2);
 
             Camera.Source = mask.ToBitmapSource();
+            CameraConvexHull.Source = mask
+                .ConvexHull()
+                .ToBitmapSource();
+
 
             CameraSkeletonized.Source = mask.Skeletonize().ToBitmapSource();
+            
             var maskMog = frame
                 .SubtrackBackground(backgroundSubtractor)
                 .Threshold(175, 255)
                 .Erode(2);
 
             CameraMog.Source = maskMog.ToBitmapSource();
-
-
-            CameraMogSkeletonized.Source = maskMog
-                .Skeletonize()
-                .ToBitmapSource();
+            
         }       
     }
 }

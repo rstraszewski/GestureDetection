@@ -18,6 +18,6 @@
         <Image Grid.Row="1" Grid.Column="1" Name="Camera" />
         <Image Grid.Row="1" Grid.Column="0"  Name="CameraSkeletonized" />
         <Image Grid.Row="0" Grid.Column="1" Name="CameraMog" />
-        <Image Grid.Row="0" Grid.Column="0"  Name="CameraMogSkeletonized" />
+        <Image Grid.Row="0" Grid.Column="0"  Name="CameraConvexHull" />
     </Grid>
 </Window>

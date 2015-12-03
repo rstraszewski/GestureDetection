@@ -6,7 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
+using Emgu.CV.Features2D;
 using Emgu.CV.Structure;
+using Emgu.CV.Util;
 using Emgu.CV.VideoSurveillance;
 
 namespace GestureDetection.Extensions
@@ -33,6 +35,24 @@ namespace GestureDetection.Extensions
             } while (CvInvoke.CountNonZero(frame) != 0);
 
             return skel;
+        }
+
+        public static Mat ConvexHull(this Mat frame)
+        {
+            var result = new Mat(frame.Size, DepthType.Cv8U, 1);
+            var temp = new Mat(frame.Size, DepthType.Cv8U, 1);
+
+            using (VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint())
+            {
+                CvInvoke.FindContours(frame, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
+                CvInvoke.DrawContours(result, contours, -1, new MCvScalar(255, 255, 255), 3);
+                CvInvoke.CornerHarris(result, temp, 3);
+
+                //CvInvoke.ConvexHull(contours, result);
+
+
+            }
+            return temp;
         }
 
         public static Mat SubtrackBackground(this IInputArrayOfArrays frame, BackgroundSubtractor backgroundSubtractor = null)

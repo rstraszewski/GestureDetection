@@ -55,8 +55,6 @@ namespace GestureDetection.Extensions
                 int largestCountourIndex = -1;
                 for (int i = 0; i < contours.Size; i++)
                 {
-                    MCvScalar color = new MCvScalar(0, 0, 255);
-
                     double a = CvInvoke.ContourArea(contours[i], false);  //  Find the area of contour
                     if (a > largestCountourSize)
                     {
@@ -69,30 +67,10 @@ namespace GestureDetection.Extensions
 
                 if (largestCountourIndex > -1)
                 {
-                    var convexHullPoints = new VectorOfPoint();
 
-                        CvInvoke.ConvexHull(contours[largestCountourIndex], convexHullPoints);
-
-                    
-
-                    CvInvoke.Polylines(withContures, convexHullPoints, true, new MCvScalar(0, 0, 255), 4);
-
-                    //for (int i = 0; i < convexHullPoints.Size; i++)
-                    //{
-                    //    var point = convexHullPoints[i];
-
-                    //    CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(255, 255, 0), 2);
-                    //}
-                    //var defects = new Mat();
-
-                    //var convexHullInts = new VectorOfInt();
-
-                    //CvInvoke.ConvexHull(contours[largestCountourIndex], convexHullPoints);
-
-                    //CvInvoke.ConvexityDefects(contours[largestCountourIndex], convexHullInts, defects);
-                    ReturnConvexityDefects(contours[largestCountourIndex], withContures);
+                    ConvexityDefectsAndConvexHull(contours[largestCountourIndex], withContures);
                 }
-                
+
 
                 //                for (int i = 0; i < convexHullPoints.Size; i++)
                 //                {
@@ -109,7 +87,7 @@ namespace GestureDetection.Extensions
             return withContures;
         }
 
-        public static void ReturnConvexityDefects(VectorOfPoint contour, Mat withContures)
+        public static void ConvexityDefectsAndConvexHull(VectorOfPoint contour, Mat withContures)
         {
             using (var convexHull = new VectorOfInt())
             using (Mat convexityDefect = new Mat())
@@ -125,16 +103,33 @@ namespace GestureDetection.Extensions
                        convexityDefect.NumberOfChannels);
                     convexityDefect.CopyTo(m);
 
+                    Point? lastPoint2 = null;
+                    var vector = new VectorOfPoint();
+                    bool ignore = false;
                     for (int i = 0; i < m.Rows; i++)
                     {
                         var point = contour.ToArray()[m.Data[i, 0]];
                         var point2 = contour.ToArray()[m.Data[i, 2]];
-                        CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(255, 0, 255), 5);
-                        CvInvoke.Circle(withContures, Point.Round(point2), 3, new MCvScalar(0, 255, 0), 5);
+
+                        if (lastPoint2.HasValue)
+                        {
+                            var length = Math.Sqrt((lastPoint2.Value.X - point2.X) ^ 2 + (lastPoint2.Value.Y - point2.Y) ^ 2);
+
+                            if (length < 5)
+                                ignore = true;
+                        }
+                        vector.Push(new[] {point});
+                        lastPoint2 = point2;
+
+                        if (!ignore)
+                        //    CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(255, 0, 255), 5);
+                        CvInvoke.Circle(withContures, Point.Round(point2), 3, new MCvScalar(0, 255, 0), 10);
                     }
+                    CvInvoke.Polylines(withContures, vector, true, new MCvScalar(0, 0, 255), 2);
+
                 }
             }
-            
+
         }
 
 
@@ -150,7 +145,7 @@ namespace GestureDetection.Extensions
 
             return output;
         }
-  
+
         public static Mat GaussianBlur(this Mat frame, Size size)
         {
             var result = new Mat();

@@ -39,12 +39,11 @@ namespace GestureDetection.Extensions
 
         public static Mat ConvexHull(this Mat frame)
         {
-            var withContures = new Mat(frame.Size, DepthType.Cv8U, 1);
-            var withCorners = new Mat(frame.Size, DepthType.Cv8U, 1);
+            var withContures = new Mat(frame.Size, DepthType.Cv8U, 3);
+            //var withConvexHull = new Mat(frame.Size, DepthType.Cv8U, 3);
             var afterDilatation = new Mat(frame.Size, DepthType.Cv8U, 1);
             var afterCompare = new Mat(frame.Size, DepthType.Cv8U, 1);
 
-            using (var convexHullPoints = new VectorOfPoint())
             using (var contours = new VectorOfVectorOfPoint())
             {
                 var element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(3, 3), new Point(1, 1));
@@ -52,7 +51,7 @@ namespace GestureDetection.Extensions
                 CvInvoke.FindContours(frame, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
                 //CvInvoke.DrawContours(withContures, contours, -1, new MCvScalar(255, 255, 255), 1);
 
-                double largestCountourSize = -1.0;
+                double largestCountourSize = 0;
                 int largestCountourIndex = -1;
                 for (int i = 0; i < contours.Size; i++)
                 {
@@ -66,9 +65,28 @@ namespace GestureDetection.Extensions
                     }
 
                 }
-           
                 CvInvoke.DrawContours(withContures, contours, largestCountourIndex, new MCvScalar(255, 255, 255), 5);
-                //CvInvoke.ConvexHull(withContures, convexHullPoints);
+
+                if (largestCountourIndex > -1)
+                {
+                    var convexHullPoints = new VectorOfPoint(contours[0].Size);
+
+                    if (contours[largestCountourIndex].Size > 0)
+                        CvInvoke.ConvexHull(contours[largestCountourIndex], convexHullPoints);
+
+                    
+
+                    CvInvoke.Polylines(withContures, convexHullPoints, true, new MCvScalar(0, 0, 255), 4);
+
+                    for (int i = 0; i < convexHullPoints.Size; i++)
+                    {
+                        var point = convexHullPoints[i];
+
+                        CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(255, 255, 0), 2);
+                    }
+                }
+                
+
                 //                for (int i = 0; i < convexHullPoints.Size; i++)
                 //                {
                 //                    CvInvoke.Circle(withContures, convexHullPoints[i], 3, new MCvScalar(100, 100, 100));

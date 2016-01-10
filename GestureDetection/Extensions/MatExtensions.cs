@@ -40,7 +40,7 @@ namespace GestureDetection.Extensions
         public static Mat ConvexHull(this Mat frame)
         {
             var withContures = new Mat(frame.Size, DepthType.Cv8U, 3);
-            //var withConvexHull = new Mat(frame.Size, DepthType.Cv8U, 3);
+            var withDefects = new Mat(frame.Size, DepthType.Cv8U, 3);
             var afterDilatation = new Mat(frame.Size, DepthType.Cv8U, 1);
             var afterCompare = new Mat(frame.Size, DepthType.Cv8U, 1);
 
@@ -69,9 +69,8 @@ namespace GestureDetection.Extensions
 
                 if (largestCountourIndex > -1)
                 {
-                    var convexHullPoints = new VectorOfPoint(contours[0].Size);
+                    var convexHullPoints = new VectorOfPoint();
 
-                    if (contours[largestCountourIndex].Size > 0)
                         CvInvoke.ConvexHull(contours[largestCountourIndex], convexHullPoints);
 
                     
@@ -84,6 +83,14 @@ namespace GestureDetection.Extensions
 
                         CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(255, 255, 0), 2);
                     }
+                    var defects = new Mat();
+
+                    var convexHullInts = new VectorOfInt();
+
+                    CvInvoke.ConvexHull(contours[largestCountourIndex], convexHullPoints);
+
+                    //CvInvoke.ConvexityDefects(contours[largestCountourIndex], convexHullInts, defects);
+                    ReturnConvexityDefects(contours[largestCountourIndex], withContures);
                 }
                 
 
@@ -101,6 +108,35 @@ namespace GestureDetection.Extensions
             }
             return withContures;
         }
+
+        public static void ReturnConvexityDefects(VectorOfPoint contour, Mat withContures)
+        {
+            using (var convexHull = new VectorOfInt())
+            using (Mat convexityDefect = new Mat())
+            {
+                //Draw the contour in white thick line
+                CvInvoke.ConvexHull(contour, convexHull);
+                CvInvoke.ConvexityDefects(contour, convexHull, convexityDefect);
+
+                if (!convexityDefect.IsEmpty)
+                {
+                    //Data from Mat are not directly readable so we convert it to Matrix<>
+                    Matrix<int> m = new Matrix<int>(convexityDefect.Rows, convexityDefect.Cols,
+                       convexityDefect.NumberOfChannels);
+                    convexityDefect.CopyTo(m);
+
+                    for (int i = 0; i < m.Rows; i++)
+                    {
+                        var point = contour.ToArray()[m.Data[i, 0]];
+                        var point2 = contour.ToArray()[m.Data[i, 1]];
+                        CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(255, 0, 255), 5);
+                        CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(0, 255, 0), 5);
+                    }
+                }
+            }
+            
+        }
+
 
         public static Mat SubtrackBackground(this IInputArrayOfArrays frame, BackgroundSubtractor backgroundSubtractor = null)
         {

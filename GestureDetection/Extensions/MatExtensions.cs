@@ -77,17 +77,17 @@ namespace GestureDetection.Extensions
 
                     CvInvoke.Polylines(withContures, convexHullPoints, true, new MCvScalar(0, 0, 255), 4);
 
-                    for (int i = 0; i < convexHullPoints.Size; i++)
-                    {
-                        var point = convexHullPoints[i];
+                    //for (int i = 0; i < convexHullPoints.Size; i++)
+                    //{
+                    //    var point = convexHullPoints[i];
 
-                        CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(255, 255, 0), 2);
-                    }
-                    var defects = new Mat();
+                    //    CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(255, 255, 0), 2);
+                    //}
+                    //var defects = new Mat();
 
-                    var convexHullInts = new VectorOfInt();
+                    //var convexHullInts = new VectorOfInt();
 
-                    CvInvoke.ConvexHull(contours[largestCountourIndex], convexHullPoints);
+                    //CvInvoke.ConvexHull(contours[largestCountourIndex], convexHullPoints);
 
                     //CvInvoke.ConvexityDefects(contours[largestCountourIndex], convexHullInts, defects);
                     ReturnConvexityDefects(contours[largestCountourIndex], withContures);
@@ -128,9 +128,9 @@ namespace GestureDetection.Extensions
                     for (int i = 0; i < m.Rows; i++)
                     {
                         var point = contour.ToArray()[m.Data[i, 0]];
-                        var point2 = contour.ToArray()[m.Data[i, 1]];
+                        var point2 = contour.ToArray()[m.Data[i, 2]];
                         CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(255, 0, 255), 5);
-                        CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(0, 255, 0), 5);
+                        CvInvoke.Circle(withContures, Point.Round(point2), 3, new MCvScalar(0, 255, 0), 5);
                     }
                 }
             }

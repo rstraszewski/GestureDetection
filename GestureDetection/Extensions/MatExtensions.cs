@@ -50,12 +50,29 @@ namespace GestureDetection.Extensions
                 var element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(3, 3), new Point(1, 1));
 
                 CvInvoke.FindContours(frame, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
-                CvInvoke.DrawContours(withContures, contours, -1, new MCvScalar(255, 255, 255), 1);
-                CvInvoke.ConvexHull(withContures, convexHullPoints);
-                for (int i = 0; i < convexHullPoints.Size; i++)
+                //CvInvoke.DrawContours(withContures, contours, -1, new MCvScalar(255, 255, 255), 1);
+
+                double largestCountourSize = -1.0;
+                int largestCountourIndex = -1;
+                for (int i = 0; i < contours.Size; i++)
                 {
-                    CvInvoke.Circle(withContures, convexHullPoints[i], 3, new MCvScalar(100, 100, 100));
+                    MCvScalar color = new MCvScalar(0, 0, 255);
+
+                    double a = CvInvoke.ContourArea(contours[i], false);  //  Find the area of contour
+                    if (a > largestCountourSize)
+                    {
+                        largestCountourSize = a;
+                        largestCountourIndex = i;                //Store the index of largest contour
+                    }
+
                 }
+           
+                CvInvoke.DrawContours(withContures, contours, largestCountourIndex, new MCvScalar(255, 255, 255), 5);
+                //CvInvoke.ConvexHull(withContures, convexHullPoints);
+                //                for (int i = 0; i < convexHullPoints.Size; i++)
+                //                {
+                //                    CvInvoke.Circle(withContures, convexHullPoints[i], 3, new MCvScalar(100, 100, 100));
+                //                }
                 //CvInvoke.ConvexityDefects(contours, convexHullPoints, withCorners);
                 //CvInvoke.CornerHarris(withContures, withCorners, 3);
                 //CvInvoke.Dilate(withCorners, afterDilatation, element, new Point(1, 1), 1, BorderType.Constant, new MCvScalar());

@@ -39,20 +39,32 @@ namespace GestureDetection.Extensions
 
         public static Mat ConvexHull(this Mat frame)
         {
-            var result = new Mat(frame.Size, DepthType.Cv8U, 1);
-            var temp = new Mat(frame.Size, DepthType.Cv8U, 1);
+            var withContures = new Mat(frame.Size, DepthType.Cv8U, 1);
+            var withCorners = new Mat(frame.Size, DepthType.Cv8U, 1);
+            var afterDilatation = new Mat(frame.Size, DepthType.Cv8U, 1);
+            var afterCompare = new Mat(frame.Size, DepthType.Cv8U, 1);
 
-            using (VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint())
+            using (var convexHullPoints = new VectorOfPoint())
+            using (var contours = new VectorOfVectorOfPoint())
             {
-                CvInvoke.FindContours(frame, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
-                CvInvoke.DrawContours(result, contours, -1, new MCvScalar(255, 255, 255), 3);
-                CvInvoke.CornerHarris(result, temp, 3);
+                var element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(3, 3), new Point(1, 1));
 
-                //CvInvoke.ConvexHull(contours, result);
+                CvInvoke.FindContours(frame, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
+                CvInvoke.DrawContours(withContures, contours, -1, new MCvScalar(255, 255, 255), 1);
+                CvInvoke.ConvexHull(withContures, convexHullPoints);
+                for (int i = 0; i < convexHullPoints.Size; i++)
+                {
+                    CvInvoke.Circle(withContures, convexHullPoints[i], 3, new MCvScalar(100, 100, 100));
+                }
+                //CvInvoke.ConvexityDefects(contours, convexHullPoints, withCorners);
+                //CvInvoke.CornerHarris(withContures, withCorners, 3);
+                //CvInvoke.Dilate(withCorners, afterDilatation, element, new Point(1, 1), 1, BorderType.Constant, new MCvScalar());
+                //ValueType localMax = CvInvoke.cvCreateMat(afterDilatation.Height, afterDilatation.Width, DepthType.Cv8U);
+                //CvInvoke.Compare(withCorners, afterDilatation, afterCompare, CmpType.Equal);
 
 
             }
-            return temp;
+            return withContures;
         }
 
         public static Mat SubtrackBackground(this IInputArrayOfArrays frame, BackgroundSubtractor backgroundSubtractor = null)

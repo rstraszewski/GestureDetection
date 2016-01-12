@@ -65,7 +65,7 @@ namespace GestureDetection
                 .ToGrey()
                 .GaussianBlur(new Size(11, 11))
                 .AbsDiff(background)
-                .Threshold(30, 200)
+                .Threshold(10, 200)
                 .Dilate(2);
 
             Camera.Source = mask.ToBitmapSource();

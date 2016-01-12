@@ -105,10 +105,12 @@ namespace GestureDetection.Extensions
 
                     Point? lastPoint2 = null;
                     var vector = new VectorOfPoint();
+                    var allPoints = new VectorOfPoint();
                     bool ignore = false;
                     for (int i = 0; i < m.Rows; i++)
                     {
                         var point = contour.ToArray()[m.Data[i, 0]];
+                        var point3 = contour.ToArray()[m.Data[i, 1]];
                         var point2 = contour.ToArray()[m.Data[i, 2]];
 
                         if (lastPoint2.HasValue)
@@ -118,13 +120,41 @@ namespace GestureDetection.Extensions
                             if (length < 5)
                                 ignore = true;
                         }
-                        vector.Push(new[] {point});
+                        vector.Push(new[] {point, });
+                        allPoints.Push(new[] {point,point2, point3 });
                         lastPoint2 = point2;
+                        //if (!ignore)
+                            //CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(255, 0, 255), 5);
+                        //CvInvoke.Circle(withContures, Point.Round(point2), 3, new MCvScalar(0, 255, 0), 10);
+                        ignore = false;
 
-                        if (!ignore)
-                        //    CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(255, 0, 255), 5);
-                        CvInvoke.Circle(withContures, Point.Round(point2), 3, new MCvScalar(0, 255, 0), 10);
+
                     }
+
+                    var orderedPoints = allPoints.ToArray().Distinct().OrderBy(x => Math.Sqrt(Math.Pow(x.X, 2) + Math.Pow(x.Y, 2)));
+                    Point? lastPoint = null;
+
+                    foreach (var orderedPoint in orderedPoints)
+                    {
+                        if (lastPoint.HasValue)
+                        {
+                            var length = Math.Sqrt(Math.Pow(lastPoint.Value.X - orderedPoint.X, 2) + Math.Pow(lastPoint.Value.Y - orderedPoint.Y, 2));
+
+                            if (length < 50)
+                                ignore = true;
+                            else
+                            {
+                                ignore = false;
+
+                            }
+                        }
+
+                        lastPoint = orderedPoint;
+                        if (!ignore)
+                            CvInvoke.Circle(withContures, Point.Round(orderedPoint), 3, new MCvScalar(0, 255, 0), 10);
+
+                    }
+
                     CvInvoke.Polylines(withContures, vector, true, new MCvScalar(0, 0, 255), 2);
 
                 }

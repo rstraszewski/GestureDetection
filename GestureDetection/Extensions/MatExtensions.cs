@@ -191,6 +191,23 @@ namespace GestureDetection.Extensions
             return result;
         }
 
+        public static int getLowerLimitThreshold(this Mat frame)
+        {
+            var result = new Mat();
+            int upperLimit = 200;
+            int lowerLimit = 0;
+            float fulfulfillmentWithBlack = 0;
+            while (fulfulfillmentWithBlack < 0.9 && lowerLimit < upperLimit)
+            {
+                lowerLimit++;
+                CvInvoke.Threshold(frame, result, lowerLimit, upperLimit, ThresholdType.Binary);
+                float nonBlackPoints = CvInvoke.CountNonZero(result.ToGrey());
+                float numbOfAllPoints = result.Width * result.Height;
+                fulfulfillmentWithBlack = 1 - (nonBlackPoints / numbOfAllPoints);
+            }
+            return lowerLimit;
+        }
+
         public static Mat Threshold(this Mat frame, double from, double to)
         {
             var result = new Mat();

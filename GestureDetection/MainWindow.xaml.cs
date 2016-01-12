@@ -61,11 +61,13 @@ namespace GestureDetection
         {
             var frame = capture
                 .QueryFrame();
+
+           var lowerLimit = frame.getLowerLimitThreshold();
            var mask = frame
                 .ToGrey()
                 .GaussianBlur(new Size(11, 11))
                 .AbsDiff(background)
-                .Threshold(10, 200)
+                .Threshold(lowerLimit, 200)
                 .Dilate(2);
 
             Camera.Source = mask.ToBitmapSource();

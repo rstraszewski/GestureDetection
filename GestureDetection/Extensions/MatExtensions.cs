@@ -118,12 +118,12 @@ namespace GestureDetection.Extensions
                             if (length < 5)
                                 ignore = true;
                         }
-                        vector.Push(new[] {point});
+                        vector.Push(new[] { point });
                         lastPoint2 = point2;
 
                         if (!ignore)
-                        //    CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(255, 0, 255), 5);
-                        CvInvoke.Circle(withContures, Point.Round(point2), 3, new MCvScalar(0, 255, 0), 10);
+                            //    CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(255, 0, 255), 5);
+                            CvInvoke.Circle(withContures, Point.Round(point2), 3, new MCvScalar(0, 255, 0), 10);
                     }
                     CvInvoke.Polylines(withContures, vector, true, new MCvScalar(0, 0, 255), 2);
 
@@ -159,6 +159,23 @@ namespace GestureDetection.Extensions
             var result = new Mat();
             CvInvoke.CvtColor(frame, result, ColorConversion.Bgr2Gray);
             return result;
+        }
+
+        public static int getLowerLimitThreshold(this Mat frame)
+        {
+            var result = new Mat();
+            int upperLimit = 200;
+            int lowerLimit = 0;
+            float fulfulfillmentWithBlack = 0;
+            while (fulfulfillmentWithBlack < 0.9 && lowerLimit < upperLimit)
+            {
+                lowerLimit++;
+                CvInvoke.Threshold(frame, result, lowerLimit, upperLimit, ThresholdType.Binary);
+                float nonBlackPoints = CvInvoke.CountNonZero(result.ToGrey());
+                float numbOfAllPoints = result.Width * result.Height;
+                fulfulfillmentWithBlack = 1 - (nonBlackPoints / numbOfAllPoints);
+            }
+            return lowerLimit;
         }
 
         public static Mat Threshold(this Mat frame, double from, double to)

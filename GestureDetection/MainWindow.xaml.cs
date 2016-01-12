@@ -49,7 +49,6 @@ namespace GestureDetection
             capture = new Capture(CaptureType.Any);
             backgroundSubtractor = new BackgroundSubtractorMOG2();
 
-
             background = capture
                 .QueryFrame()
                 .ToGrey()

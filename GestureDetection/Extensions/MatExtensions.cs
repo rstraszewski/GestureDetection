@@ -126,10 +126,51 @@ namespace GestureDetection.Extensions
                             CvInvoke.Circle(withContures, Point.Round(point2), 3, new MCvScalar(0, 255, 0), 10);
                     }
                     CvInvoke.Polylines(withContures, vector, true, new MCvScalar(0, 0, 255), 2);
-
+                    CvInvoke.Circle(withContures, Compute2DPolygonCentroid(contour), 4, new MCvScalar(0, 0, 255), 10);
                 }
             }
 
+        }
+
+        public static Point Compute2DPolygonCentroid(VectorOfPoint contour)
+        {
+            Point centroid = new Point() { X = 0, Y = 0 };
+            int signedArea = 0;
+            int x0; // Current vertex X
+            int y0; // Current vertex Y
+            int x1; // Next vertex X
+            int y1; // Next vertex Y
+            int a;  // Partial signed area
+
+            // For all vertices except last
+            int i;
+            for (i = 0; i < contour.Size - 1; ++i)
+            {
+                x0 = contour[i].X;
+                y0 = contour[i].Y;
+                x1 = contour[i + 1].X;
+                y1 = contour[i + 1].Y;
+                a = x0 * y1 - x1 * y0;
+                signedArea += a;
+                centroid.X += (x0 + x1) * a;
+                centroid.Y += (y0 + y1) * a;
+            }
+
+            // Do last vertex
+            x0 = contour[i].X;
+            y0 = contour[i].Y;
+            x1 = contour[0].X;
+            y1 = contour[0].Y;
+            a = x0 * y1 - x1 * y0;
+            signedArea += a;
+            centroid.X += (x0 + x1) * a;
+            centroid.Y += (y0 + y1) * a;
+
+            signedArea = (int)(signedArea * 0.5);
+            centroid.X = (int)(centroid.X / (6 * signedArea));
+            centroid.Y = (int)(centroid.Y / (6 * signedArea));
+
+            return centroid;
         }
 
 

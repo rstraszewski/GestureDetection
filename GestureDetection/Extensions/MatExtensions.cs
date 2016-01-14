@@ -170,9 +170,18 @@ namespace GestureDetection.Extensions
                     CvInvoke.Polylines(withContures, vector, true, new MCvScalar(0, 0, 255), 2);
 
                     QueueOfCentroids.Enqueue(Compute2DPolygonCentroid(contour));
-                    foreach (var centroid in QueueOfCentroids.q)
+                    if (QueueOfCentroids.q.Count == MaxSize)
                     {
-                        CvInvoke.Circle(withContures, centroid, 4, new MCvScalar(0, 0, 255), 10);
+                        var beginning = QueueOfCentroids.q.First();
+                        var end = QueueOfCentroids.q.Last();
+                        CvInvoke.Line(withContures, beginning, end, new MCvScalar(0, 0, 255), 5);
+                    }
+                    else
+                    {
+                        foreach (var centroid in QueueOfCentroids.q)
+                        {
+                            CvInvoke.Circle(withContures, centroid, 4, new MCvScalar(0, 0, 255), 5);
+                        }
                     }
                     //                    CvInvoke.Circle(withContures, Compute2DPolygonCentroid(contour), 4, new MCvScalar(0, 0, 255), 10);
                 }

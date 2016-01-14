@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -15,6 +16,26 @@ namespace GestureDetection.Extensions
 {
     public static class MatExtensions
     {
+        public class FixedSizedQueue<T>
+        {
+            public ConcurrentQueue<T> q = new ConcurrentQueue<T>();
+
+            public int Limit { get; set; }
+            public void Enqueue(T obj)
+            {
+                q.Enqueue(obj);
+                lock (this)
+                {
+                    T overflow;
+                    while (q.Count > Limit && q.TryDequeue(out overflow)) ;
+                }
+            }
+        }
+
+        private const int MaxSize = 25;
+        public static FixedSizedQueue<Point> QueueOfCentroids =
+            new FixedSizedQueue<Point>() { Limit = MaxSize };
+
         public static Mat Skeletonize(this Mat frame)
         {
             CvInvoke.Threshold(frame, frame, 127, 255, ThresholdType.Binary);
@@ -120,11 +141,11 @@ namespace GestureDetection.Extensions
                             if (length < 5)
                                 ignore = true;
                         }
-                        vector.Push(new[] {point, });
-                        allPoints.Push(new[] {point,point2, point3 });
+                        vector.Push(new[] { point, });
+                        allPoints.Push(new[] { point, point2, point3 });
                         lastPoint2 = point2;
                         //if (!ignore)
-                            //CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(255, 0, 255), 5);
+                        //CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(255, 0, 255), 5);
                         //CvInvoke.Circle(withContures, Point.Round(point2), 3, new MCvScalar(0, 255, 0), 10);
                         ignore = false;
 
@@ -156,7 +177,13 @@ namespace GestureDetection.Extensions
                     }
 
                     CvInvoke.Polylines(withContures, vector, true, new MCvScalar(0, 0, 255), 2);
-                    CvInvoke.Circle(withContures, Compute2DPolygonCentroid(contour), 4, new MCvScalar(0, 0, 255), 10);
+
+                    QueueOfCentroids.Enqueue(Compute2DPolygonCentroid(contour));
+                    foreach (var centroid in QueueOfCentroids.q)
+                    {
+                        CvInvoke.Circle(withContures, centroid, 4, new MCvScalar(0, 0, 255), 10);
+                    }
+                    //                    CvInvoke.Circle(withContures, Compute2DPolygonCentroid(contour), 4, new MCvScalar(0, 0, 255), 10);
                 }
             }
 
@@ -232,7 +259,7 @@ namespace GestureDetection.Extensions
             return result;
         }
 
-        public static int getLowerLimitThreshold(this Mat frame)
+        public static int GetLowerLimitThreshold(this Mat frame)
         {
             var result = new Mat();
             int upperLimit = 200;

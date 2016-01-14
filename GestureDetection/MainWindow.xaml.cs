@@ -61,7 +61,7 @@ namespace GestureDetection
             var frame = capture
                 .QueryFrame();
 
-           var lowerLimit = frame.getLowerLimitThreshold();
+           var lowerLimit = frame.GetLowerLimitThreshold();
            var mask = frame
                 .ToGrey()
                 .GaussianBlur(new Size(11, 11))

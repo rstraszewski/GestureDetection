@@ -182,6 +182,11 @@ namespace GestureDetection.Extensions
                     CvInvoke.Polylines(withContures, vector, true, new MCvScalar(0, 0, 255), 2);
 
                     QueueOfCentroids.Enqueue(Compute2DPolygonCentroid(contour));
+                    
+                    // *******
+                    // UNCOMMENT BELOW TO OBTAIN DIRECTION DESCRIPTION
+                    // *******
+
 //                    if (QueueOfCentroids.q.Count == MaxSize)
 //                    {
 //                        var beginning = QueueOfCentroids.q.ElementAt(MaxSize - 5);

@@ -11,6 +11,7 @@ using Emgu.CV.Features2D;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
 using Emgu.CV.VideoSurveillance;
+using Emgu.CV.XFeatures2D;
 
 namespace GestureDetection.Extensions
 {
@@ -32,7 +33,17 @@ namespace GestureDetection.Extensions
             }
         }
 
+        private enum Directions
+        {
+            None,
+            East,
+            West,
+            North,
+            South
+        }
+
         private const int MaxSize = 25;
+        private static string Direction = "Move your hand";
         public static FixedSizedQueue<Point> QueueOfCentroids =
             new FixedSizedQueue<Point>() { Limit = MaxSize };
 
@@ -126,7 +137,7 @@ namespace GestureDetection.Extensions
                         var degreeAcos = Math.Acos((Math.Pow(CalculateDistance(pointStart, pointFarthest), 2)
                                                    + Math.Pow(CalculateDistance(pointEnd, pointFarthest), 2)
                                                    - Math.Pow(CalculateDistance(pointStart, pointEnd), 2))
-                                               /(2 * CalculateDistance(pointStart, pointFarthest) * CalculateDistance(pointEnd, pointFarthest)));
+                                               / (2 * CalculateDistance(pointStart, pointFarthest) * CalculateDistance(pointEnd, pointFarthest)));
 
 
 
@@ -134,8 +145,8 @@ namespace GestureDetection.Extensions
 
 
                         vector.Push(new[] { pointStart, });
-                        var degree = degreeAcos*180/Math.PI;
-                        if (m.Data[i,3] > 80*256 && degree > 25)
+                        var degree = degreeAcos * 180 / Math.PI;
+                        if (m.Data[i, 3] > 80 * 256 && degree > 25)
                         {
                             CvInvoke.Circle(withContures, Point.Round(pointFarthest), 7, new MCvScalar(255, 255, 0), 10);
 
@@ -163,31 +174,111 @@ namespace GestureDetection.Extensions
 
                         lastPoint = orderedPoint;
                         //if (!ignore)
-                            //CvInvoke.Circle(withContures, Point.Round(orderedPoint), 3, new MCvScalar(0, 255, 0), 10);
+                        //CvInvoke.Circle(withContures, Point.Round(orderedPoint), 3, new MCvScalar(0, 255, 0), 10);
 
                     }
 
                     CvInvoke.Polylines(withContures, vector, true, new MCvScalar(0, 0, 255), 2);
 
                     QueueOfCentroids.Enqueue(Compute2DPolygonCentroid(contour));
-                    if (QueueOfCentroids.q.Count == MaxSize)
+//                    if (QueueOfCentroids.q.Count == MaxSize)
+//                    {
+//                        var beginning = QueueOfCentroids.q.ElementAt(MaxSize - 5);
+//                        var end = QueueOfCentroids.q.Last();
+//                        var dx = QueueOfCentroids.q.ElementAt(MaxSize - 5).X - end.X;
+//                        var dy = end.Y - QueueOfCentroids.q.ElementAt(MaxSize - 5).Y;
+//
+//                        Directions eastWest;
+//                        Directions northSouth;
+//
+//                        SetDirections(dx, dy, out eastWest, out northSouth);
+//                        ResolveDirection(eastWest, northSouth);
+//
+//                        CvInvoke.PutText(
+//                            withContures,
+//                            Direction,
+//                            new Point(50, 50),
+//                            FontFace.HersheyComplex,
+//                            1,
+//                            new MCvScalar(255, 255, 255),
+//                            2);
+//                        CvInvoke.Line(withContures, beginning, end, new MCvScalar(0, 0, 255), 5);
+//                    }
+                    foreach (var centroid in QueueOfCentroids.q)
                     {
-                        var beginning = QueueOfCentroids.q.First();
-                        var end = QueueOfCentroids.q.Last();
-                        CvInvoke.Line(withContures, beginning, end, new MCvScalar(0, 0, 255), 5);
+                        CvInvoke.Circle(withContures, centroid, 4, new MCvScalar(0, 0, 255), 5);
                     }
-                    else
-                    {
-                        foreach (var centroid in QueueOfCentroids.q)
-                        {
-                            CvInvoke.Circle(withContures, centroid, 4, new MCvScalar(0, 0, 255), 5);
-                        }
-                    }
-                    //                    CvInvoke.Circle(withContures, Compute2DPolygonCentroid(contour), 4, new MCvScalar(0, 0, 255), 10);
                 }
             }
 
+        }
+
+        private static void ResolveDirection(Directions eastWest, Directions northSouth)
+        {
+            if (eastWest == Directions.East)
+            {
+                if (northSouth == Directions.North)
+                {
+                    Direction = string.Format("North East");
+                }
+                else if (northSouth == Directions.South)
+                {
+                    Direction = string.Format("South East");
+                }
+                else
+                {
+                    Direction = string.Format("East");
+                }
             }
+            else if (eastWest == Directions.West)
+            {
+                if (northSouth == Directions.North)
+                {
+                    Direction = string.Format("North West");
+                }
+                else if (northSouth == Directions.South)
+                {
+                    Direction = string.Format("South West");
+                }
+                else
+                {
+                    Direction = string.Format("West");
+                }
+            }
+        }
+
+        private static void SetDirections(int dx, int dy, out Directions eastWest, out Directions northSouth)
+        {
+            Directions localEastWest = new Directions();
+            Directions localNorthSouth = new Directions();
+
+            if (Math.Abs(dx) > 10)
+            {
+                if (Math.Sign(dx) == 1)
+                {
+                    localEastWest = Directions.East;
+                }
+                else
+                {
+                    localEastWest = Directions.West;
+                }
+            }
+
+            if (Math.Abs(dy) > 10)
+            {
+                if (Math.Sign(dx) == 1)
+                {
+                    localNorthSouth = Directions.North;
+                }
+                else
+                {
+                    localNorthSouth = Directions.South;
+                }
+            }
+
+            eastWest = localEastWest;
+            northSouth = localNorthSouth;
+        }
 
         public static double CalculateDistance(Point p1, Point p2)
         {

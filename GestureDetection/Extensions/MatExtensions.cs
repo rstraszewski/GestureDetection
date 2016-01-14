@@ -69,7 +69,7 @@ namespace GestureDetection.Extensions
             return skel;
         }
 
-        public static Mat ConvexHull(this Mat frame)
+        public static Mat ConvexHull(this Mat frame, ref int countConvDefects)
         {
             var withContures = new Mat(frame.Size, DepthType.Cv8U, 3);
 
@@ -94,7 +94,7 @@ namespace GestureDetection.Extensions
                 if (largestCountourIndex > -1)
                 {
 
-                    ConvexityDefectsAndConvexHull(contours[largestCountourIndex], withContures);
+                    ConvexityDefectsAndConvexHull(contours[largestCountourIndex], withContures, ref countConvDefects);
                 }
 
                 //CvInvoke.ConvexityDefects(contours, convexHullPoints, withCorners);
@@ -108,7 +108,7 @@ namespace GestureDetection.Extensions
             return withContures;
         }
 
-        public static void ConvexityDefectsAndConvexHull(VectorOfPoint contour, Mat withContures)
+        public static void ConvexityDefectsAndConvexHull(VectorOfPoint contour, Mat withContures, ref int countConvDefects)
         {
             using (var convexHull = new VectorOfInt())
             using (Mat convexityDefect = new Mat())
@@ -128,6 +128,7 @@ namespace GestureDetection.Extensions
                     var vector = new VectorOfPoint();
                     var allPoints = new VectorOfPoint();
                     bool ignore = false;
+                    countConvDefects = 0;
                     for (int i = 0; i < m.Rows; i++)
                     {
                         var pointStart = contour.ToArray()[m.Data[i, 0]];
@@ -145,16 +146,16 @@ namespace GestureDetection.Extensions
 
 
                         vector.Push(new[] { pointStart, });
-                        var degree = degreeAcos * 180 / Math.PI;
-                        if (m.Data[i, 3] > 80 * 256 && degree > 25)
+                        var degree = degreeAcos*180/Math.PI;
+                        if (m.Data[i,3] > 20*256 && degree > 25 && degree < 110)
                         {
                             CvInvoke.Circle(withContures, Point.Round(pointFarthest), 7, new MCvScalar(255, 255, 0), 10);
-
-                            allPoints.Push(new[] { pointStart, pointFarthest, pointEnd });
+                            countConvDefects++;
+                            //allPoints.Push(new[] { pointStart, pointFarthest, pointEnd });
                         }
                     }
 
-                    var orderedPoints = allPoints.ToArray().Distinct().OrderBy(x => Math.Sqrt(Math.Pow(x.X, 2) + Math.Pow(x.Y, 2)));
+                   /* var orderedPoints = allPoints.ToArray().Distinct().OrderBy(x => Math.Sqrt(Math.Pow(x.X, 2) + Math.Pow(x.Y, 2)));
                     Point? lastPoint = null;
 
                     foreach (var orderedPoint in orderedPoints)
@@ -174,9 +175,9 @@ namespace GestureDetection.Extensions
 
                         lastPoint = orderedPoint;
                         //if (!ignore)
-                        //CvInvoke.Circle(withContures, Point.Round(orderedPoint), 3, new MCvScalar(0, 255, 0), 10);
+                            //CvInvoke.Circle(withContures, Point.Round(orderedPoint), 3, new MCvScalar(0, 255, 0), 10);
 
-                    }
+                    }*/
 
                     CvInvoke.Polylines(withContures, vector, true, new MCvScalar(0, 0, 255), 2);
 
@@ -237,11 +238,11 @@ namespace GestureDetection.Extensions
                     Direction = string.Format("North West");
                 }
                 else if (northSouth == Directions.South)
-                {
+                    {
                     Direction = string.Format("South West");
-                }
-                else
-                {
+                    }
+                    else
+                    {
                     Direction = string.Format("West");
                 }
             }
@@ -259,17 +260,17 @@ namespace GestureDetection.Extensions
                     localEastWest = Directions.East;
                 }
                 else
-                {
+                        {
                     localEastWest = Directions.West;
                 }
-            }
+                        }
 
             if (Math.Abs(dy) > 10)
             {
                 if (Math.Sign(dx) == 1)
                 {
                     localNorthSouth = Directions.North;
-                }
+                    }
                 else
                 {
                     localNorthSouth = Directions.South;
@@ -278,7 +279,7 @@ namespace GestureDetection.Extensions
 
             eastWest = localEastWest;
             northSouth = localNorthSouth;
-        }
+            }
 
         public static double CalculateDistance(Point p1, Point p2)
         {

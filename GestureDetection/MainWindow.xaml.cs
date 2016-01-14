@@ -68,22 +68,27 @@ namespace GestureDetection
                 .AbsDiff(background)
                 .Threshold(lowerLimit, 200)
                 .Dilate(2);
-
+            int count = 0;
             Camera.Source = mask.ToBitmapSource();
             CameraConvexHull.Source = mask
-                .ConvexHull()
+                .ConvexHull(ref count)
                 .ToBitmapSource();
 
-
-            //CameraSkeletonized.Source = mask.Skeletonize().ToBitmapSource();
+            GestureRecognition(count);
             
-//            var maskMog = frame
-//                .SubtrackBackground(backgroundSubtractor)
-//                .Threshold(175, 255)
-//                .Erode(2);
+        }
 
-            //CameraMog.Source = maskMog.ToBitmapSource();
-            
-        }       
+        private static void GestureRecognition(int count)
+        {
+            switch (count)
+            {
+                case 4:
+                    Console.WriteLine("open hand");
+                    break;
+                case 0:
+                    Console.WriteLine("fist");
+                    break;
+            }
+        }
     }
 }

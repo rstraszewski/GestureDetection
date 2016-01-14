@@ -61,16 +61,10 @@ namespace GestureDetection.Extensions
         public static Mat ConvexHull(this Mat frame)
         {
             var withContures = new Mat(frame.Size, DepthType.Cv8U, 3);
-            var withDefects = new Mat(frame.Size, DepthType.Cv8U, 3);
-            var afterDilatation = new Mat(frame.Size, DepthType.Cv8U, 1);
-            var afterCompare = new Mat(frame.Size, DepthType.Cv8U, 1);
 
             using (var contours = new VectorOfVectorOfPoint())
             {
-                var element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(3, 3), new Point(1, 1));
-
                 CvInvoke.FindContours(frame, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
-                //CvInvoke.DrawContours(withContures, contours, -1, new MCvScalar(255, 255, 255), 1);
 
                 double largestCountourSize = 0;
                 int largestCountourIndex = -1;
@@ -92,11 +86,6 @@ namespace GestureDetection.Extensions
                     ConvexityDefectsAndConvexHull(contours[largestCountourIndex], withContures);
                 }
 
-
-                //                for (int i = 0; i < convexHullPoints.Size; i++)
-                //                {
-                //                    CvInvoke.Circle(withContures, convexHullPoints[i], 3, new MCvScalar(100, 100, 100));
-                //                }
                 //CvInvoke.ConvexityDefects(contours, convexHullPoints, withCorners);
                 //CvInvoke.CornerHarris(withContures, withCorners, 3);
                 //CvInvoke.Dilate(withCorners, afterDilatation, element, new Point(1, 1), 1, BorderType.Constant, new MCvScalar());

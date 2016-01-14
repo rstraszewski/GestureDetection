@@ -75,14 +75,14 @@ namespace GestureDetection
                 .ToBitmapSource();
 
 
-            CameraSkeletonized.Source = mask.Skeletonize().ToBitmapSource();
+            //CameraSkeletonized.Source = mask.Skeletonize().ToBitmapSource();
             
-            var maskMog = frame
-                .SubtrackBackground(backgroundSubtractor)
-                .Threshold(175, 255)
-                .Erode(2);
+//            var maskMog = frame
+//                .SubtrackBackground(backgroundSubtractor)
+//                .Threshold(175, 255)
+//                .Erode(2);
 
-            CameraMog.Source = maskMog.ToBitmapSource();
+            //CameraMog.Source = maskMog.ToBitmapSource();
             
         }       
     }

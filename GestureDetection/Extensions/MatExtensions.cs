@@ -98,26 +98,28 @@ namespace GestureDetection.Extensions
                     bool ignore = false;
                     for (int i = 0; i < m.Rows; i++)
                     {
-                        var point = contour.ToArray()[m.Data[i, 0]];
-                        var point3 = contour.ToArray()[m.Data[i, 1]];
-                        var point2 = contour.ToArray()[m.Data[i, 2]];
+                        var pointStart = contour.ToArray()[m.Data[i, 0]];
+                        var pointEnd = contour.ToArray()[m.Data[i, 1]];
+                        var pointFarthest = contour.ToArray()[m.Data[i, 2]];
 
-                        if (lastPoint2.HasValue)
+                        var degreeAcos = Math.Acos((Math.Pow(CalculateDistance(pointStart, pointFarthest), 2)
+                                                   + Math.Pow(CalculateDistance(pointEnd, pointFarthest), 2)
+                                                   - Math.Pow(CalculateDistance(pointStart, pointEnd), 2))
+                                               /(2 * CalculateDistance(pointStart, pointFarthest) * CalculateDistance(pointEnd, pointFarthest)));
+
+
+
+                        CvInvoke.Polylines(withContures, new[] { pointStart, pointEnd }, true, new MCvScalar(0, 255, 255), 5);
+
+
+                        vector.Push(new[] { pointStart, });
+                        var degree = degreeAcos*180/Math.PI;
+                        if (m.Data[i,3] > 80*256 && degree > 25)
                         {
-                            var length = Math.Sqrt((lastPoint2.Value.X - point2.X) ^ 2 + (lastPoint2.Value.Y - point2.Y) ^ 2);
+                            CvInvoke.Circle(withContures, Point.Round(pointFarthest), 7, new MCvScalar(255, 255, 0), 10);
 
-                            if (length < 5)
-                                ignore = true;
+                            allPoints.Push(new[] { pointStart, pointFarthest, pointEnd });
                         }
-                        vector.Push(new[] {point, });
-                        allPoints.Push(new[] {point,point2, point3 });
-                        lastPoint2 = point2;
-                        //if (!ignore)
-                            //CvInvoke.Circle(withContures, Point.Round(point), 3, new MCvScalar(255, 0, 255), 5);
-                        //CvInvoke.Circle(withContures, Point.Round(point2), 3, new MCvScalar(0, 255, 0), 10);
-                        ignore = false;
-
-
                     }
 
                     var orderedPoints = allPoints.ToArray().Distinct().OrderBy(x => Math.Sqrt(Math.Pow(x.X, 2) + Math.Pow(x.Y, 2)));
@@ -139,8 +141,8 @@ namespace GestureDetection.Extensions
                         }
 
                         lastPoint = orderedPoint;
-                        if (!ignore)
-                            CvInvoke.Circle(withContures, Point.Round(orderedPoint), 3, new MCvScalar(0, 255, 0), 10);
+                        //if (!ignore)
+                            //CvInvoke.Circle(withContures, Point.Round(orderedPoint), 3, new MCvScalar(0, 255, 0), 10);
 
                     }
 
@@ -149,6 +151,11 @@ namespace GestureDetection.Extensions
                 }
             }
 
+        }
+
+        public static double CalculateDistance(Point p1, Point p2)
+        {
+            return Math.Sqrt(Math.Pow((p2.X - p1.X), 2) + Math.Pow((p2.Y - p1.Y), 2));
         }
 
         public static Point Compute2DPolygonCentroid(VectorOfPoint contour)

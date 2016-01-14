@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -15,6 +16,26 @@ namespace GestureDetection.Extensions
 {
     public static class MatExtensions
     {
+        public class FixedSizedQueue<T>
+        {
+            public ConcurrentQueue<T> q = new ConcurrentQueue<T>();
+
+            public int Limit { get; set; }
+            public void Enqueue(T obj)
+            {
+                q.Enqueue(obj);
+                lock (this)
+                {
+                    T overflow;
+                    while (q.Count > Limit && q.TryDequeue(out overflow)) ;
+                }
+            }
+        }
+
+        private const int MaxSize = 25;
+        public static FixedSizedQueue<Point> QueueOfCentroids =
+            new FixedSizedQueue<Point>() { Limit = MaxSize };
+
         public static Mat Skeletonize(this Mat frame)
         {
             CvInvoke.Threshold(frame, frame, 127, 255, ThresholdType.Binary);
@@ -147,11 +168,17 @@ namespace GestureDetection.Extensions
                     }
 
                     CvInvoke.Polylines(withContures, vector, true, new MCvScalar(0, 0, 255), 2);
-                    CvInvoke.Circle(withContures, Compute2DPolygonCentroid(contour), 4, new MCvScalar(0, 0, 255), 10);
+
+                    QueueOfCentroids.Enqueue(Compute2DPolygonCentroid(contour));
+                    foreach (var centroid in QueueOfCentroids.q)
+                    {
+                        CvInvoke.Circle(withContures, centroid, 4, new MCvScalar(0, 0, 255), 10);
+                    }
+                    //                    CvInvoke.Circle(withContures, Compute2DPolygonCentroid(contour), 4, new MCvScalar(0, 0, 255), 10);
                 }
             }
 
-        }
+            }
 
         public static double CalculateDistance(Point p1, Point p2)
         {

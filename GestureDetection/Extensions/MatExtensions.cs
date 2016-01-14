@@ -135,7 +135,7 @@ namespace GestureDetection.Extensions
 
                         vector.Push(new[] { pointStart, });
                         var degree = degreeAcos*180/Math.PI;
-                        if (m.Data[i,3] > 80*256 && degree > 25)
+                        if (m.Data[i,3] > 40*256 && degree > 30 && degree < 90)
                         {
                             CvInvoke.Circle(withContures, Point.Round(pointFarthest), 7, new MCvScalar(255, 255, 0), 10);
 

@@ -155,61 +155,46 @@ namespace GestureDetection.Extensions
                         }
                     }
 
-                   /* var orderedPoints = allPoints.ToArray().Distinct().OrderBy(x => Math.Sqrt(Math.Pow(x.X, 2) + Math.Pow(x.Y, 2)));
-                    Point? lastPoint = null;
-
-                    foreach (var orderedPoint in orderedPoints)
-                    {
-                        if (lastPoint.HasValue)
-                        {
-                            var length = Math.Sqrt(Math.Pow(lastPoint.Value.X - orderedPoint.X, 2) + Math.Pow(lastPoint.Value.Y - orderedPoint.Y, 2));
-
-                            if (length < 50)
-                                ignore = true;
-                            else
-                            {
-                                ignore = false;
-
-                            }
-                        }
-
-                        lastPoint = orderedPoint;
-                        //if (!ignore)
-                            //CvInvoke.Circle(withContures, Point.Round(orderedPoint), 3, new MCvScalar(0, 255, 0), 10);
-
-                    }*/
+                    CvInvoke.PutText(
+                            withContures,
+                            GestureRecognition(countConvDefects),
+                            new Point(50, 100),
+                            FontFace.HersheyComplex,
+                            1,
+                            new MCvScalar(255, 255, 255),
+                            2);
 
                     CvInvoke.Polylines(withContures, vector, true, new MCvScalar(0, 0, 255), 2);
 
                     QueueOfCentroids.Enqueue(Compute2DPolygonCentroid(contour));
-                    
+
                     // *******
                     // UNCOMMENT BELOW TO OBTAIN DIRECTION DESCRIPTION
                     // *******
 
-//                    if (QueueOfCentroids.q.Count == MaxSize)
-//                    {
-//                        var beginning = QueueOfCentroids.q.ElementAt(MaxSize - 5);
-//                        var end = QueueOfCentroids.q.Last();
-//                        var dx = QueueOfCentroids.q.ElementAt(MaxSize - 5).X - end.X;
-//                        var dy = end.Y - QueueOfCentroids.q.ElementAt(MaxSize - 5).Y;
-//
-//                        Directions eastWest;
-//                        Directions northSouth;
-//
-//                        SetDirections(dx, dy, out eastWest, out northSouth);
-//                        ResolveDirection(eastWest, northSouth);
-//
-//                        CvInvoke.PutText(
-//                            withContures,
-//                            Direction,
-//                            new Point(50, 50),
-//                            FontFace.HersheyComplex,
-//                            1,
-//                            new MCvScalar(255, 255, 255),
-//                            2);
-//                        CvInvoke.Line(withContures, beginning, end, new MCvScalar(0, 0, 255), 5);
-//                    }
+                    if (QueueOfCentroids.q.Count == MaxSize)
+                    {
+                        var beginning = QueueOfCentroids.q.ElementAt(MaxSize - 5);
+                        var end = QueueOfCentroids.q.Last();
+                        var dx = QueueOfCentroids.q.ElementAt(MaxSize - 5).X - end.X;
+                        var dy = end.Y - QueueOfCentroids.q.ElementAt(MaxSize - 5).Y;
+
+                        Directions eastWest;
+                        Directions northSouth;
+
+                        SetDirections(dx, dy, out eastWest, out northSouth);
+                        ResolveDirection(eastWest, northSouth);
+
+                        CvInvoke.PutText(
+                            withContures,
+                            Direction,
+                            new Point(50, 50),
+                            FontFace.HersheyComplex,
+                            1,
+                            new MCvScalar(255, 255, 255),
+                            2);
+                        CvInvoke.Line(withContures, beginning, end, new MCvScalar(0, 0, 255), 5);
+                    }
                     foreach (var centroid in QueueOfCentroids.q)
                     {
                         CvInvoke.Circle(withContures, centroid, 4, new MCvScalar(0, 0, 255), 5);
@@ -217,6 +202,18 @@ namespace GestureDetection.Extensions
                 }
             }
 
+        }
+
+        private static string GestureRecognition(int count)
+        {
+            switch (count)
+            {
+                case 4:
+                    return "Open hand";
+                case 0:
+                    return "fist";
+            }
+            return " ";
         }
 
         private static void ResolveDirection(Directions eastWest, Directions northSouth)

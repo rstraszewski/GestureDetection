@@ -64,31 +64,18 @@ namespace GestureDetection
            var lowerLimit = frame.GetLowerLimitThreshold();
            var mask = frame
                 .ToGrey()
-                .GaussianBlur(new Size(11, 11))
+                .GaussianBlur(new Size(21, 21))
                 .AbsDiff(background)
-                .Threshold(lowerLimit, 200)
+                .Threshold(160 , 200)
                 .Dilate(2);
             int count = 0;
             Camera.Source = mask.ToBitmapSource();
             CameraConvexHull.Source = mask
                 .ConvexHull(ref count)
                 .ToBitmapSource();
-
-            GestureRecognition(count);
             
         }
 
-        private static void GestureRecognition(int count)
-        {
-            switch (count)
-            {
-                case 4:
-                    Console.WriteLine("open hand");
-                    break;
-                case 0:
-                    Console.WriteLine("fist");
-                    break;
-            }
-        }
+        
     }
 }

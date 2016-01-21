@@ -25,11 +25,9 @@ namespace GestureDetection.Extensions
             public void Enqueue(T obj)
             {
                 q.Enqueue(obj);
-                lock (this)
-                {
-                    T overflow;
-                    while (q.Count > Limit && q.TryDequeue(out overflow)) ;
-                }
+                T overflow;
+                while (q.Count > Limit && q.TryDequeue(out overflow)) ;
+
             }
         }
 
@@ -46,28 +44,6 @@ namespace GestureDetection.Extensions
         private static string Direction = "Move your hand";
         public static FixedSizedQueue<Point> QueueOfCentroids =
             new FixedSizedQueue<Point>() { Limit = MaxSize };
-
-        public static Mat Skeletonize(this Mat frame)
-        {
-            CvInvoke.Threshold(frame, frame, 127, 255, ThresholdType.Binary);
-            var skel = new Mat(frame.Size, DepthType.Cv8U, 1);
-            var temp = new Mat(frame.Size, DepthType.Cv8U, 1);
-            var eroded = new Mat(frame.Size, DepthType.Cv8U, 1);
-            skel.SetTo(new Bgr(0, 0, 0).MCvScalar);
-
-            var element = CvInvoke.GetStructuringElement(ElementShape.Cross, new Size(3, 3), new Point(1, 1));
-
-            do
-            {
-                CvInvoke.Erode(frame, eroded, element, new Point(1, 1), 1, BorderType.Constant, new MCvScalar());
-                CvInvoke.Dilate(eroded, temp, element, new Point(1, 1), 1, BorderType.Constant, new MCvScalar());
-                CvInvoke.Subtract(frame, temp, temp);
-                CvInvoke.BitwiseOr(skel, temp, skel);
-                eroded.CopyTo(frame);
-            } while (CvInvoke.CountNonZero(frame) != 0);
-
-            return skel;
-        }
 
         public static Mat ConvexHull(this Mat frame, ref int countConvDefects)
         {
@@ -96,14 +72,6 @@ namespace GestureDetection.Extensions
 
                     ConvexityDefectsAndConvexHull(contours[largestCountourIndex], withContures, ref countConvDefects);
                 }
-
-                //CvInvoke.ConvexityDefects(contours, convexHullPoints, withCorners);
-                //CvInvoke.CornerHarris(withContures, withCorners, 3);
-                //CvInvoke.Dilate(withCorners, afterDilatation, element, new Point(1, 1), 1, BorderType.Constant, new MCvScalar());
-                //ValueType localMax = CvInvoke.cvCreateMat(afterDilatation.Height, afterDilatation.Width, DepthType.Cv8U);
-                //CvInvoke.Compare(withCorners, afterDilatation, afterCompare, CmpType.Equal);
-
-
             }
             return withContures;
         }
@@ -113,20 +81,17 @@ namespace GestureDetection.Extensions
             using (var convexHull = new VectorOfInt())
             using (Mat convexityDefect = new Mat())
             {
-                //Draw the contour in white thick line
                 CvInvoke.ConvexHull(contour, convexHull);
                 CvInvoke.ConvexityDefects(contour, convexHull, convexityDefect);
 
                 if (!convexityDefect.IsEmpty)
                 {
-                    //Data from Mat are not directly readable so we convert it to Matrix<>
                     Matrix<int> m = new Matrix<int>(convexityDefect.Rows, convexityDefect.Cols,
                        convexityDefect.NumberOfChannels);
                     convexityDefect.CopyTo(m);
 
                     Point? lastPoint2 = null;
                     var vector = new VectorOfPoint();
-                    var allPoints = new VectorOfPoint();
                     bool ignore = false;
                     countConvDefects = 0;
                     for (int i = 0; i < m.Rows; i++)
@@ -146,12 +111,11 @@ namespace GestureDetection.Extensions
 
 
                         vector.Push(new[] { pointStart, });
-                        var degree = degreeAcos*180/Math.PI;
-                        if (m.Data[i,3] > 20*256 && degree > 25 && degree < 110)
+                        var degree = degreeAcos * 180 / Math.PI;
+                        if (m.Data[i, 3] > 20 * 256 && degree > 25 && degree < 110)
                         {
                             CvInvoke.Circle(withContures, Point.Round(pointFarthest), 7, new MCvScalar(255, 255, 0), 10);
                             countConvDefects++;
-                            //allPoints.Push(new[] { pointStart, pointFarthest, pointEnd });
                         }
                     }
 
@@ -167,10 +131,6 @@ namespace GestureDetection.Extensions
                     CvInvoke.Polylines(withContures, vector, true, new MCvScalar(0, 0, 255), 2);
 
                     QueueOfCentroids.Enqueue(Compute2DPolygonCentroid(contour));
-
-                    // *******
-                    // UNCOMMENT BELOW TO OBTAIN DIRECTION DESCRIPTION
-                    // *******
 
                     if (QueueOfCentroids.q.Count == MaxSize)
                     {
@@ -240,11 +200,11 @@ namespace GestureDetection.Extensions
                     Direction = string.Format("North West");
                 }
                 else if (northSouth == Directions.South)
-                    {
+                {
                     Direction = string.Format("South West");
-                    }
-                    else
-                    {
+                }
+                else
+                {
                     Direction = string.Format("West");
                 }
             }
@@ -262,17 +222,17 @@ namespace GestureDetection.Extensions
                     localEastWest = Directions.East;
                 }
                 else
-                        {
+                {
                     localEastWest = Directions.West;
                 }
-                        }
+            }
 
             if (Math.Abs(dy) > 10)
             {
                 if (Math.Sign(dx) == 1)
                 {
                     localNorthSouth = Directions.North;
-                    }
+                }
                 else
                 {
                     localNorthSouth = Directions.South;
@@ -281,7 +241,7 @@ namespace GestureDetection.Extensions
 
             eastWest = localEastWest;
             northSouth = localNorthSouth;
-            }
+        }
 
         public static double CalculateDistance(Point p1, Point p2)
         {
@@ -329,20 +289,6 @@ namespace GestureDetection.Extensions
             return centroid;
         }
 
-
-        public static Mat SubtrackBackground(this IInputArrayOfArrays frame, BackgroundSubtractor backgroundSubtractor = null)
-        {
-            if (backgroundSubtractor == null)
-            {
-                backgroundSubtractor = new BackgroundSubtractorMOG2();
-            }
-
-            var output = new Mat();
-            backgroundSubtractor.Apply(frame, output);
-
-            return output;
-        }
-
         public static Mat GaussianBlur(this Mat frame, Size size)
         {
             var result = new Mat();
@@ -364,7 +310,7 @@ namespace GestureDetection.Extensions
             int upperLimit = 200;
             int lowerLimit = 0;
             float fulfulfillmentWithBlack = 0;
-            while (fulfulfillmentWithBlack < 0.9 && lowerLimit < upperLimit)
+            while (fulfulfillmentWithBlack < 0.8 && lowerLimit < upperLimit)
             {
                 lowerLimit++;
                 CvInvoke.Threshold(frame, result, lowerLimit, upperLimit, ThresholdType.Binary);

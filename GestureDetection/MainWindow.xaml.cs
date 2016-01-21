@@ -22,7 +22,6 @@ namespace GestureDetection
     {
         private Capture capture;
         private DispatcherTimer timer;
-        private BackgroundSubtractor backgroundSubtractor;
         private Mat background;
         public MainWindow()
         {
@@ -47,7 +46,6 @@ namespace GestureDetection
         private void InitializeEmguCv()
         {
             capture = new Capture(CaptureType.Any);
-            backgroundSubtractor = new BackgroundSubtractorMOG2();
 
             background = capture
                 .QueryFrame()
@@ -66,7 +64,7 @@ namespace GestureDetection
                 .ToGrey()
                 .GaussianBlur(new Size(21, 21))
                 .AbsDiff(background)
-                .Threshold(160 , 200)
+                .Threshold(lowerLimit, 200)
                 .Dilate(2);
             int count = 0;
             Camera.Source = mask.ToBitmapSource();
